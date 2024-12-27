@@ -1,11 +1,11 @@
 name: CxONE Dast Scan Gin and Juice
 on:
-  #pull_request:
-  # branches:
-  # - main
-  #push: 
-  # branches:
-  # - main
+  pull_request:
+   branches:
+   - master
+  push: 
+   branches:
+   - master
     
   workflow_dispatch: #adds a 'run now' button
   
