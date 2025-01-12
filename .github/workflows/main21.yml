@@ -1,0 +1,58 @@
+name: CxONE Dast Scan Gin and Juice
+on:
+  #pull_request:
+  # branches:
+  # - main
+  #push: 
+  # branches:
+  # - main
+    
+  workflow_dispatch: #adds a 'run now' button
+
+permissions : 
+  contents : read,update
+
+concurrency:
+ group: ${{ github.workflow }}-${{ github.ref }}
+ cancel-in-progress: true
+  
+jobs:
+ build:
+   permissions:
+    contents: read # for actions/checkout to fetch code
+    security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+    actions: read # only required for a private repository by github/codeql-action/upload-sarif
+   # The type of runner that the job will run on 
+   runs-on: ubuntu-latest
+   steps:
+   - name: Checkout
+     uses: actions/checkout@v3
+   - name: Create Output folder
+     run: mkdir ${{ github.workspace }}/output_fold
+   - name: Change dir owner
+     run: sudo chown -R 1000:1000 ${{ github.workspace }}
+   - name: Checkmarx DAST Github Action
+     uses: Checkmarx/dast-github-action@v2.3.0
+     env:
+      CX_APIKEY : ${{secrets.CX_API
+     with:
+        # The type of scan to preform (web, api)
+        command: web
+        # The path to the ZAP configuration file
+        config: './gin_juice_noauth.yaml'
+        # The baseURL for the Checkmarx One Servers
+        base_url: https://eu.ast.checkmarx.net
+        # The environment ID previously created in the Frontend
+        environment_id: c6333ed3-7a99-4772-b2ae-f621dfee0e31
+        output: ${{ github.workspace }}/output_fold #./output
+   - name: Reclaim output directory
+     if: always()
+     run: sudo chown -R 1001:1001 ${{ github.workspace }}/output_fold
+   - uses: actions/upload-artifact@v3
+     if: always()
+     name: Upload Logs
+     with:
+      name: report
+      path: ${{ github.workspace }}/output_fold
+
+   
